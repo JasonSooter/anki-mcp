@@ -8,7 +8,7 @@ dependencies = [
     # opening the collection with a newer anki than AnkiDroid understands
     # upgrades the schema and forces a full sync on the phone. Treat a bump
     # here as a migration, not a dependency update. See README.
-    "anki==26.8.1",
+    "anki==26.9.3",
     "mcp>=2.1.1",
     "uvicorn>=0.34",
     # Telemetry ships over OTLP (e.g. to Grafana Cloud). Optional at runtime: with no
