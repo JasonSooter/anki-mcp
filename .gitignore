@@ -1,0 +1,10 @@
+# Runtime state: the collection must never be committed or baked into an image.
+data/
+config/
+secrets.env
+
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

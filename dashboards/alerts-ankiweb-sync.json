@@ -1,0 +1,178 @@
+[
+  {
+    "title": "AnkiWeb sync needs a human (full sync required)",
+    "ruleGroup": "anki-mcp",
+    "folderUID": "REPLACE_WITH_YOUR_FOLDER_UID",
+    "condition": "C",
+    "for": "0s",
+    "noDataState": "OK",
+    "execErrState": "Alerting",
+    "annotations": {
+      "summary": "AnkiWeb refused a sync and asked for a FULL sync. Nothing is syncing until a human resolves it.",
+      "description": "sync_to_ankiweb will not perform a full sync on its own, because it discards one side's changes entirely. Until this is resolved, every sync is a no-op and cards captured on the phone are NOT reaching the desktop.\n\nResolve deliberately -- see the 'Full sync' section of the README. Decide which side is authoritative first; the wrong direction destroys work.\n\nnoDataState is OK here: anki-mcp syncs only when sync_to_ankiweb is called, so no data means nobody synced, which is normal."
+    },
+    "labels": {
+      "service": "anki-mcp",
+      "severity": "warning"
+    },
+    "data": [
+      {
+        "refId": "A",
+        "relativeTimeRange": {
+          "from": 900,
+          "to": 0
+        },
+        "datasourceUid": "grafanacloud-logs",
+        "model": {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "grafanacloud-logs"
+          },
+          "queryType": "instant",
+          "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"production\"} |= \"ankiweb sync\" | outcome=\"full_sync_required\" [15m]))"
+        }
+      },
+      {
+        "refId": "B",
+        "datasourceUid": "__expr__",
+        "model": {
+          "refId": "B",
+          "type": "reduce",
+          "reducer": "last",
+          "expression": "A",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          }
+        }
+      },
+      {
+        "refId": "C",
+        "datasourceUid": "__expr__",
+        "model": {
+          "refId": "C",
+          "type": "threshold",
+          "expression": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "conditions": [
+            {
+              "evaluator": {
+                "type": "gt",
+                "params": [
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "title": "AnkiWeb sync erroring",
+    "ruleGroup": "anki-mcp",
+    "folderUID": "REPLACE_WITH_YOUR_FOLDER_UID",
+    "condition": "E",
+    "for": "0s",
+    "noDataState": "OK",
+    "execErrState": "Alerting",
+    "annotations": {
+      "summary": "sync_to_ankiweb failed for a reason other than a full-sync demand.",
+      "description": "A sync was attempted and failed -- credentials, network, or an AnkiWeb-side problem.\n\nThe full-sync demand is EXCLUDED here (subtracted in expression D) because it is a deliberate refusal, not a fault, and it has its own alert with its own remedy. Without the subtraction every full-sync demand would fire both rules: the refusal raises ToolError, and @instrumented records any exception as status=error.\n\nCheck `docker logs anki-mcp` on the host, and whether the cached AnkiWeb key in the /config volume is still valid. The container healthcheck stays green throughout: /healthz reports that the collection is open, not that syncing works."
+    },
+    "labels": {
+      "service": "anki-mcp",
+      "severity": "warning"
+    },
+    "data": [
+      {
+        "refId": "A",
+        "relativeTimeRange": {
+          "from": 900,
+          "to": 0
+        },
+        "datasourceUid": "grafanacloud-logs",
+        "model": {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "grafanacloud-logs"
+          },
+          "queryType": "instant",
+          "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"production\"} | tool=\"sync_to_ankiweb\" | status=\"error\" [15m])) or vector(0)"
+        }
+      },
+      {
+        "refId": "B",
+        "relativeTimeRange": {
+          "from": 900,
+          "to": 0
+        },
+        "datasourceUid": "grafanacloud-logs",
+        "model": {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "grafanacloud-logs"
+          },
+          "queryType": "instant",
+          "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"production\"} |= \"ankiweb sync\" | outcome=\"full_sync_required\" [15m])) or vector(0)"
+        }
+      },
+      {
+        "refId": "C",
+        "datasourceUid": "__expr__",
+        "model": {
+          "refId": "C",
+          "type": "reduce",
+          "reducer": "last",
+          "expression": "A",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          }
+        }
+      },
+      {
+        "refId": "D",
+        "datasourceUid": "__expr__",
+        "model": {
+          "refId": "D",
+          "type": "math",
+          "expression": "$C - $B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          }
+        }
+      },
+      {
+        "refId": "E",
+        "datasourceUid": "__expr__",
+        "model": {
+          "refId": "E",
+          "type": "threshold",
+          "expression": "D",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "conditions": [
+            {
+              "evaluator": {
+                "type": "gt",
+                "params": [
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

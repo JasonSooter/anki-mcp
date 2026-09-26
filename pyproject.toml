@@ -1,0 +1,39 @@
+[project]
+name = "anki-mcp"
+version = "0.1.0"
+description = "MCP server exposing an Anki collection over Streamable HTTP"
+requires-python = ">=3.12"
+dependencies = [
+    # Pinned exactly. The anki library owns the collection's schema version:
+    # opening the collection with a newer anki than AnkiDroid understands
+    # upgrades the schema and forces a full sync on the phone. Treat a bump
+    # here as a migration, not a dependency update. See README.
+    "anki==26.8.1",
+    "mcp>=2.1.1",
+    "uvicorn>=0.34",
+    # Telemetry ships over OTLP (e.g. to Grafana Cloud). Optional at runtime: with no
+    # OTEL_EXPORTER_OTLP_ENDPOINT the server logs to stdout and serves normally.
+    "opentelemetry-sdk>=1.30",
+    "opentelemetry-exporter-otlp-proto-http>=1.30",
+    # MP3 encoding for word audio, which is cut from raw PCM (see audio.py).
+    # A wheel with LAME built in: no ffmpeg or apt packages in the image.
+    "lameenc>=1.8.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/anki_mcp"]
+
+[dependency-groups]
+# Not installed into the image: the Dockerfile installs the project itself, so
+# test-only dependencies stay out of the runtime.
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

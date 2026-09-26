@@ -1,0 +1,2162 @@
+{
+ "uid": "anki-mcp",
+ "title": "Anki MCP",
+ "description": "The MCP server exposing the Anki collection. The server is the single writer; the phone reviews downstream of AnkiWeb. Logs arrive over OTLP into Loki.",
+ "tags": [
+  "anki",
+  "mcp"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 1,
+ "editable": true,
+ "graphTooltip": 1,
+ "refresh": "1m",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "templating": {
+  "list": [
+   {
+    "name": "env",
+    "type": "custom",
+    "label": "Environment",
+    "query": "production,local",
+    "current": {
+     "text": "production",
+     "value": "production"
+    },
+    "options": [
+     {
+      "text": "production",
+      "value": "production",
+      "selected": true
+     },
+     {
+      "text": "local",
+      "value": "local",
+      "selected": false
+     }
+    ],
+    "includeAll": false,
+    "multi": false
+   }
+  ]
+ },
+ "annotations": {
+  "list": [
+   {
+    "name": "Restarts",
+    "enable": true,
+    "iconColor": "blue",
+    "datasource": {
+     "type": "loki",
+     "uid": "grafanacloud-logs"
+    },
+    "target": {
+     "expr": "{service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"server started\"",
+     "queryType": "range",
+     "refId": "Anno"
+    }
+   }
+  ]
+ },
+ "panels": [
+  {
+   "type": "row",
+   "title": "Is it healthy?",
+   "id": 1,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Tool calls",
+   "id": 2,
+   "description": "Every tool invocation in the selected range.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Errors",
+   "id": 3,
+   "description": "Tool calls that raised. Includes refused duplicates and rejected field names, which are the server working correctly.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | status=\"error\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Error rate",
+   "id": 4,
+   "description": "Share of tool calls that raised.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | status=\"error\" [$__range])) / sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": [],
+     "decimals": 2
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Auth failures",
+   "id": 5,
+   "description": "Requests presenting a token that did not verify. On a public Funnel endpoint this is the number to watch.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"auth failure\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Failed logins",
+   "id": 6,
+   "description": "Rejected attempts at the OAuth login page — the only thing guarding the public endpoint.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"oauth login\" | status=\"failed\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Restarts",
+   "id": 7,
+   "description": "Server starts. A climbing count means the container is crash-looping.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"server started\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Tool calls by outcome",
+   "id": 8,
+   "description": "Successes and errors over time.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | status=\"ok\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "ok"
+    },
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | status=\"error\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "error"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Latency by tool (p95)",
+   "id": 9,
+   "description": "95th percentile duration. add_note is the one that matters — it is the capture path from the phone.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "quantile_over_time(0.95, {service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | unwrap duration_ms [$__auto]) by (tool)",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{tool}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 10,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "row",
+   "title": "The collection",
+   "id": 10,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 13
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Notes",
+   "id": 11,
+   "description": "Notes in the collection, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | notes != \"\" | unwrap notes [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Cards",
+   "id": 12,
+   "description": "Cards in the collection, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | cards != \"\" | unwrap cards [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Decks",
+   "id": 13,
+   "description": "Decks, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | decks != \"\" | unwrap decks [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Due: new",
+   "id": 14,
+   "description": "New cards due, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | due_new != \"\" | unwrap due_new [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Due: learning",
+   "id": 15,
+   "description": "Cards in learning, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | due_learning != \"\" | unwrap due_learning [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Due: review",
+   "id": 16,
+   "description": "Review cards due, as of the last server start.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 14
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection stats\" | due_review != \"\" | unwrap due_review [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Notes added over time",
+   "id": 17,
+   "description": "Cards created by add_note — the German-vocab capture rate.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 18
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection mutation\" | action=\"add_note\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "notes added"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Captures by deck",
+   "id": 18,
+   "description": "Which decks the new notes land in.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 18
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum by (deck) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection mutation\" | action=\"add_note\" | deck != \"\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{deck}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "table",
+   "title": "Notes added by deck",
+   "id": 19,
+   "description": "Totals for the selected range.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 26
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sort_desc(sum by (deck) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection mutation\" | action=\"add_note\" | deck != \"\" [$__range])))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      }
+     }
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "sortBy": [
+     {
+      "desc": true,
+      "displayName": "Value"
+     }
+    ]
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "table",
+   "title": "Notes added by note type",
+   "id": 20,
+   "description": "Which note types are actually used.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 26
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sort_desc(sum by (note_type) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection mutation\" | action=\"add_note\" | note_type != \"\" [$__range])))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      }
+     }
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "sortBy": [
+     {
+      "desc": true,
+      "displayName": "Value"
+     }
+    ]
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "logs",
+   "title": "All collection mutations",
+   "id": 21,
+   "description": "Every add and edit, newest first. This is the audit trail for changes to the collection.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 34
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "{service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"collection mutation\"",
+     "refId": "A",
+     "queryType": "range"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "showLabels": false,
+    "showCommonLabels": false,
+    "wrapLogMessage": true,
+    "prettifyLogMessage": false,
+    "enableLogDetails": true,
+    "dedupStrategy": "none",
+    "sortOrder": "Descending"
+   }
+  },
+  {
+   "type": "row",
+   "title": "AnkiWeb sync",
+   "id": 22,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 44
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Syncs",
+   "id": 23,
+   "description": "sync_to_ankiweb calls that completed.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"ankiweb sync\" | outcome=~\"completed|no_changes\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Full sync refused",
+   "id": 24,
+   "description": "Times AnkiWeb demanded a full sync and the server refused. Each one needs a human decision — see the README.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"ankiweb sync\" | outcome=\"full_sync_required\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Sync errors",
+   "id": 25,
+   "description": "sync_to_ankiweb calls that raised, usually network or credentials.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | tool=\"sync_to_ankiweb\" | status=\"error\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Sync p95",
+   "id": 26,
+   "description": "95th percentile sync duration.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "quantile_over_time(0.95, {service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | tool=\"sync_to_ankiweb\" | unwrap duration_ms [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Last sync duration",
+   "id": 27,
+   "description": "Duration of the most recent sync. Use the 'Sync outcomes over time' panel below to see when syncs actually happened.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "last_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool=\"sync_to_ankiweb\" | status=\"ok\" | unwrap duration_ms [$__range])",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Media syncs",
+   "id": 28,
+   "description": "Syncs that also carried media.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 45
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"ankiweb sync\" | media=\"completed\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "orientation": "auto",
+    "textMode": "auto",
+    "colorMode": "value",
+    "graphMode": "area",
+    "justifyMode": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "color": {
+      "mode": "text"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "mappings": []
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Sync outcomes over time",
+   "id": 29,
+   "description": "Watch for full_sync_required appearing.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 49
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum by (outcome) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"ankiweb sync\" | outcome != \"\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{outcome}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "row",
+   "title": "Security and audit",
+   "id": 30,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 57
+   },
+   "panels": []
+  },
+  {
+   "type": "timeseries",
+   "title": "Auth failures and rejected logins",
+   "id": 31,
+   "description": "Both credential-rejection paths. A sustained climb on a public endpoint means someone is probing it.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 58
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"auth failure\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "bad token"
+    },
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum(count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"oauth login\" | status=\"failed\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "failed login"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Login attempts by source address",
+   "id": 32,
+   "description": "Distinct callers hitting the login page. One address repeating is a scanner.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 58
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum by (client_ip) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} |= \"oauth login\" | client_ip != \"\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{client_ip}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Write tools called",
+   "id": 33,
+   "description": "Everything that can change the collection or push to AnkiWeb.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 66
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum by (tool) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | mutation=\"true\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{tool}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Warnings and errors",
+   "id": 34,
+   "description": "Everything logged at warning or above, including auth failures and refused syncs.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 74
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "{service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | detected_level =~ \"warn|error\"",
+     "refId": "A",
+     "queryType": "range"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "showLabels": false,
+    "showCommonLabels": false,
+    "wrapLogMessage": true,
+    "prettifyLogMessage": false,
+    "enableLogDetails": true,
+    "dedupStrategy": "none",
+    "sortOrder": "Descending"
+   }
+  },
+  {
+   "type": "row",
+   "title": "Usage",
+   "id": 35,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 84
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Tools used",
+   "id": 36,
+   "description": "Call counts for the selected range.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 85
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sort_desc(sum by (tool) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" [$__range])))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      }
+     }
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "sortBy": [
+     {
+      "desc": true,
+      "displayName": "Value"
+     }
+    ]
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "table",
+   "title": "Errors by kind",
+   "id": 37,
+   "description": "ToolError is an expected refusal (bad deck name, duplicate note). Anything else is a bug.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 85
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sort_desc(sum by (error) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" | status=\"error\" [$__range])))",
+     "refId": "A",
+     "queryType": "instant",
+     "instant": true
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      }
+     }
+    }
+   ],
+   "options": {
+    "showHeader": true,
+    "sortBy": [
+     {
+      "desc": true,
+      "displayName": "Value"
+     }
+    ]
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Calls by tool",
+   "id": 38,
+   "description": "Which tools are actually used.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 93
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "sum by (tool) (count_over_time({service_name=\"anki-mcp\", deployment_environment_name=\"$env\"} | tool != \"\" [$__auto]))",
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{tool}}"
+    }
+   ],
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 30,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      },
+      "showPoints": "never",
+      "spanNulls": true
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "row",
+   "title": "Diagnostics",
+   "id": 39,
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 101
+   },
+   "panels": []
+  },
+  {
+   "type": "logs",
+   "title": "All activity",
+   "id": 40,
+   "description": "Unfiltered stream from the service.",
+   "datasource": {
+    "type": "loki",
+    "uid": "grafanacloud-logs"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 102
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "grafanacloud-logs"
+     },
+     "editorMode": "code",
+     "expr": "{service_name=\"anki-mcp\", deployment_environment_name=\"$env\"}",
+     "refId": "A",
+     "queryType": "range"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "showLabels": false,
+    "showCommonLabels": false,
+    "wrapLogMessage": true,
+    "prettifyLogMessage": false,
+    "enableLogDetails": true,
+    "dedupStrategy": "none",
+    "sortOrder": "Descending"
+   }
+  }
+ ]
+}

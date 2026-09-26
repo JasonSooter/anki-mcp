@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 6am on monday"],
+  "semanticCommits": "enabled",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "One weekly PR for routine updates, so the noise stays at one review a week. Majors stay separate: they are the ones that break.",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "groupName": "weekly dependencies"
+    },
+    {
+      "description": "Patch and digest updates merge themselves once CI is green. The anki rule below overrides this.",
+      "matchUpdateTypes": ["patch", "digest", "pin", "pinDigest"],
+      "automerge": true
+    },
+    {
+      "description": "Pin the Dockerfile base images by digest, so a rebuild cannot pull different base layers while git stays unchanged.",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+    {
+      "description": "Only patch releases and digest updates of Python 3.12. A Python version bump is a deliberate change (the anki wheels have to support it), not a weekly update.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "/^3\\.12(\\.\\d+)?-slim$/"
+    },
+    {
+      "description": "The anki pin owns the Anki collection's schema version. A newer one can force a full sync on the phone's AnkiDroid, so every bump gets its own PR and a manual gate. See README, 'Upgrading the anki package'.",
+      "matchPackageNames": ["anki"],
+      "groupName": "anki schema migration",
+      "schedule": ["at any time"],
+      "labels": ["migration"],
+      "automerge": false,
+      "semanticCommitType": "build",
+      "semanticCommitScope": "anki-mcp",
+      "prBodyNotes": [
+        "> [!WARNING]\n> **This is a schema migration, not a routine update.** Before merging:\n>\n> 1. **Schema check.** Compare `SCHEMA_MAX_VERSION` in `rslib/src/storage/upgrades/mod.rs` and `SYNC_VERSION_MAX` in `rslib/src/sync/version.rs` between the old and new tags of `ankitects/anki`. The git tags are zero-padded: `26.08.1`, not `26.8.1`. If either changed, the phone's AnkiDroid must support the new version first, or it will demand a full sync.\n> 2. Back up the data directory.\n> 3. Rebuild, run the tests, use the tools once, then `sync_to_ankiweb`, and confirm the phone still syncs normally."
+      ]
+    }
+  ]
+}

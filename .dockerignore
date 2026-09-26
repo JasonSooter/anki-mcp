@@ -1,0 +1,8 @@
+# The collection itself must never be baked into an image.
+data/
+config/
+secrets.env
+
+.venv/
+__pycache__/
+*.pyc
