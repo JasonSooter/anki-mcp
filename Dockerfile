@@ -1,7 +1,7 @@
 # The anki wheel ships prebuilt Rust extensions, so no toolchain is needed --
 # slim is enough. aqt (the Anki GUI) is deliberately never installed.
 # Pinned by digest; Renovate proposes digest updates weekly (renovate.json).
-FROM python:3.12-slim@sha256:ddb0207ae1f0356c2b724d740769b0c5f5f51cc54a0525178f721825f78fe74c
+FROM python:3.14-slim@sha256:3353bb7e9ae99c7cce6cad2b2f2b174e8f22813ac43e3b13e7a742627d2b01d8
 
 # Pinned by digest: a moving tag would silently change the builder.
 COPY --from=ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 /uv /bin/uv
