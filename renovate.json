@@ -3,6 +3,12 @@
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "timezone": "Europe/Berlin",
   "schedule": ["before 6am on monday"],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "description": "Security fixes from the OSV database replace Dependabot, which is disabled on this repo. They skip the weekly schedule so a fix does not wait for Monday.",
+    "schedule": ["at any time"],
+    "labels": ["security"]
+  },
   "semanticCommits": "enabled",
   "labels": ["dependencies"],
   "packageRules": [
