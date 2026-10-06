@@ -28,10 +28,10 @@
       "pinDigests": true
     },
     {
-      "description": "Only patch releases and digest updates of Python 3.12. A Python version bump is a deliberate change (the anki wheels have to support it), not a weekly update.",
+      "description": "Only patch releases and digest updates of Python 3.14. A minor bump is a deliberate change, not a weekly update: the anki wheel is abi3 (cp310-abi3) and runs on any newer CPython, but the other compiled dependencies have to be checked by building and testing the image.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["python"],
-      "allowedVersions": "/^3\\.12(\\.\\d+)?-slim$/"
+      "allowedVersions": "/^3\\.14(\\.\\d+)?-slim$/"
     },
     {
       "description": "The anki pin owns the Anki collection's schema version. A newer one can force a full sync on the phone's AnkiDroid, so every bump gets its own PR and a manual gate. See README, 'Upgrading the anki package'.",
