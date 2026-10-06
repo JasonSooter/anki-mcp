@@ -77,6 +77,7 @@ class Config:
     ankiweb_username: str | None
     ankiweb_password: str | None
     ankiweb_endpoint: str | None
+    gender_color_note_types: tuple[str, ...] = ()
 
     @property
     def oauth_db_path(self) -> Path:
@@ -227,4 +228,20 @@ def load() -> Config:
         ankiweb_username=username,
         ankiweb_password=password,
         ankiweb_endpoint=_env("ANKIWEB_ENDPOINT"),
+        gender_color_note_types=_gender_color_note_types(),
     )
+
+
+def _gender_color_note_types() -> tuple[str, ...]:
+    """Note types whose templates get der/die/das colour coding at startup.
+
+    Read with os.environ directly rather than _env, because an explicitly
+    empty value has to mean "none" -- the way to turn it off -- where _env
+    would fold it into "unset" and bring the default back.
+    """
+    from .gender_colors import DEFAULT_NOTE_TYPES
+
+    raw = os.environ.get("ANKI_MCP_GENDER_COLORS")
+    if raw is None:
+        return DEFAULT_NOTE_TYPES
+    return tuple(name.strip() for name in raw.split(",") if name.strip())

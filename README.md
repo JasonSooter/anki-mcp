@@ -75,6 +75,7 @@ All configuration is environment variables, normally in `secrets.env`.
 | `GOOGLE_TTS_API_KEY` | for Google TTS | -- | Text-to-Speech API key. |
 | `ANKI_MCP_TTS_VOICE` | no | `de-DE-Neural2-F` | Google TTS voice. |
 | `ANKI_MCP_PREFER_TTS` | no | `false` | Re-synthesise all audio with TTS, for one consistent voice. |
+| `ANKI_MCP_GENDER_COLORS` | no | `German (Fluent Forever)` | Comma-separated note types to colour by gender at startup; empty turns it off. See [Gender colours](#gender-colours). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_HEADERS` | no | -- | Ship structured logs over OTLP. Unset = stdout only. |
 | `ANKI_MCP_ENVIRONMENT` | no | `production` | Tags every telemetry record. |
 | `ANKI_MCP_HOST` / `ANKI_MCP_PORT` | no | `0.0.0.0` / `8770` | Listen address. |
@@ -475,6 +476,44 @@ not first say it.
 Browse → Preview window never shows the input box no matter what the template
 says. Check a template by reading it in *Manage Note Types → Cards*, or study it
 in a filtered deck (`"note:German (Fluent Forever)" card:3 is:new`).
+
+## Gender colours
+
+Every noun on a card shows in its gender's colour: **der** blue, **die** red,
+**das** green, and a **plural** form orange. Seeing *Heft* green every time
+builds the gender in as part of the word rather than as an article memorised
+next to it.
+
+It is in the note type's templates, not the notes, so every note gets it --
+existing and new -- with nothing to fill in. The server writes it at startup
+(`ANKI_MCP_GENDER_COLORS`), between marker comments that leave hand-written
+template lines alone, and rewrites it only when it differs, so it does not
+upload an unchanged note type on every sync. A template text change is not a
+schema change, so it syncs normally.
+
+**Where it shows:** wherever the word is shown -- card 1's front and every
+answer side. **Not** on card 2's prompt: it asks for the word, article
+included, and a colour there would hand over the gender being tested.
+
+**What gets coloured.** Only the `Word` and `Forms` fields, and only a noun
+phrase that is a whole entry: an article opening a segment and a capitalised
+noun closing it. German capitalises every noun, so that is enough to tell
+`der Feierabend` from `Weh dem, der lügt!`, and the entry rule keeps out the
+inflected articles in prose -- `nördlich der Alpen` is a genitive *plural*,
+`der Reihenfolge nach` a dative *feminine*, and colouring either by its form
+would teach the wrong gender.
+
+**Plural** is orange when it can be told from the text:
+
+- `das Heft, die Hefte` / `der Rat · die Räte` -- a `die` form of the noun just
+  before it, after a comma or `·`
+- `die Wanderung, -en` -- the shorthand
+- `die Unterlagen (Plural)` / `die Zugangsdaten (Pl.)` -- marked
+
+A plural with none of those -- a plural-only noun on its own in `Word`, or a
+plural compound in prose (`die Vertragsunterlagen`) -- cannot be told apart
+from a feminine without a dictionary and shows red. Mark it `(Pl.)`, or tag the
+note `plural`.
 
 ## The English field
 
