@@ -2098,3 +2098,165 @@ def test_separated_bursts_do_not_add_up_to_a_hiss() -> None:
     measured = audio.final_hiss_ms(word + puffs + array("h", bytes(2 * rate // 10)),
                                    SYNTHETIC_IG_FINAL_SECONDS)
     assert measured == 20 < ACCEPT_HISS_MS
+
+
+# --- der/die/das colour coding ----------------------------------------------
+
+def _fluent_forever_like(col):
+    """A note type shaped like the real one: the word shown on card 1's front
+    and every back, and asked for -- never shown -- on card 2's front."""
+    mm = col.models
+    nt = mm.new("German (Fluent Forever)")
+    for name in ("Word", "Forms", "Image"):
+        mm.add_field(nt, mm.new_field(name))
+    for name, qfmt, afmt in (
+        ("1. Wort erkennen", '<div class="word">{{Word}}</div>',
+         '{{FrontSide}}<hr id="answer">{{Image}}'),
+        ("2. Wort produzieren", "{{Image}}\n{{type:Word}}",
+         '{{FrontSide}}<hr id="answer"><div class="word">{{Word}}</div>'),
+    ):
+        t = mm.new_template(name)
+        t["qfmt"], t["afmt"] = qfmt, afmt
+        mm.add_template(nt, t)
+    nt["css"] = ".card { color: #1a1a1a; }"
+    mm.add(nt)
+    return mm.by_name("German (Fluent Forever)")
+
+
+def test_gender_colours_skip_the_prompt_that_asks_for_the_word(tmp_path) -> None:
+    """The production card asks for the word, article included. A coloured
+    prompt would hand over the gender it is meant to test."""
+    import anki.collection
+    from anki_mcp.gender_colors import HTML, install
+
+    col = anki.collection.Collection(str(tmp_path / "c.anki2"))
+    try:
+        _fluent_forever_like(col)
+        assert install(col, ["German (Fluent Forever)", "No Such Type"]) == [
+            "German (Fluent Forever)"
+        ]
+        nt = col.models.by_name("German (Fluent Forever)")
+        recognise, produce = nt["tmpls"]
+        assert HTML in recognise["qfmt"] and HTML in recognise["afmt"]
+        assert HTML in produce["afmt"]
+        assert "gender-colors" not in produce["qfmt"]
+        # What was there before survives.
+        assert nt["css"].startswith(".card { color: #1a1a1a; }")
+        assert ".gc-m" in nt["css"]
+    finally:
+        col.close()
+
+
+def test_gender_colours_are_not_a_schema_change(tmp_path) -> None:
+    """A schema change makes AnkiWeb demand a full sync, which sync_to_ankiweb
+    refuses -- so a startup step that caused one would wedge syncing."""
+    import anki.collection
+    from anki_mcp.gender_colors import install
+
+    col = anki.collection.Collection(str(tmp_path / "c.anki2"))
+    try:
+        _fluent_forever_like(col)
+        before = col.db.scalar("select scm from col")
+        assert install(col, ["German (Fluent Forever)"])
+        assert col.db.scalar("select scm from col") == before
+    finally:
+        col.close()
+
+
+def test_gender_colours_install_is_idempotent(tmp_path) -> None:
+    """Runs on every startup. Rewriting an unchanged note type would bump its
+    mtime and upload it again on every sync; stacking a second block would
+    run the script twice."""
+    import anki.collection
+    from anki_mcp.gender_colors import install
+
+    col = anki.collection.Collection(str(tmp_path / "c.anki2"))
+    try:
+        _fluent_forever_like(col)
+        install(col, ["German (Fluent Forever)"])
+        mtime = col.models.by_name("German (Fluent Forever)")["mod"]
+        assert install(col, ["German (Fluent Forever)"]) == []
+        nt = col.models.by_name("German (Fluent Forever)")
+        assert nt["mod"] == mtime
+        assert nt["css"].count("gender-colors:start") == 1
+        assert all(
+            t[k].count("gender-colors:start") <= 1
+            for t in nt["tmpls"] for k in ("qfmt", "afmt")
+        )
+    finally:
+        col.close()
+
+
+def test_gender_colours_can_be_turned_off(monkeypatch) -> None:
+    from anki_mcp.config import _gender_color_note_types
+
+    monkeypatch.delenv("ANKI_MCP_GENDER_COLORS", raising=False)
+    assert _gender_color_note_types() == ("German (Fluent Forever)",)
+    monkeypatch.setenv("ANKI_MCP_GENDER_COLORS", "")
+    assert _gender_color_note_types() == ()
+    monkeypatch.setenv("ANKI_MCP_GENDER_COLORS", "A, B ,")
+    assert _gender_color_note_types() == ("A", "B")
+
+
+def _gender_hits(cases):
+    """Run the card script's matcher under node, which is what Anki runs."""
+    import json
+    import shutil
+    import subprocess
+
+    from anki_mcp.gender_colors import MATCHER
+
+    if shutil.which("node") is None:
+        pytest.skip("node is not installed")
+    program = MATCHER + (
+        "\nvar cases = JSON.parse(require('fs').readFileSync(0, 'utf8'));"
+        "\nconsole.log(JSON.stringify(cases.map(function (c) {"
+        "\n  return gcHits(c[0], c[1], c[2]).map(function (h) {"
+        "\n    return h[2].slice(3) + ':' + c[0].slice(h[0], h[1]); }); })));"
+    )
+    out = subprocess.run(
+        ["node", "-e", program], input=json.dumps(cases),
+        capture_output=True, text=True, check=True,
+    )
+    return json.loads(out.stdout)
+
+
+# Every case is real text from the German (Fluent Forever) deck. The bad ones
+# are what an earlier, looser matcher got wrong.
+@pytest.mark.parametrize(("text", "in_forms", "plural_tag", "expected"), [
+    ("das Heft", False, False, ["n:das Heft"]),
+    ("die Herausgabe / der Herausgeber", False, False,
+     ["f:die Herausgabe", "m:der Herausgeber"]),
+    ("das Heft, die Hefte", True, False, ["n:das Heft", "p:die Hefte"]),
+    ("die Herausgabe, -n; der Herausgeber, -", True, False,
+     ["f:die Herausgabe", "p:-n", "m:der Herausgeber", "p:-"]),
+    ("der Rat · die Räte [ˈʁɛːtə] (Gremium)", True, False,
+     ["m:der Rat", "p:die Räte"]),
+    ("das Nutzerkonto, die Nutzerkonten", True, False,
+     ["n:das Nutzerkonto", "p:die Nutzerkonten"]),
+    ("die Zugangsdaten (nur Plural, wie die Daten)", True, False,
+     ["p:die Zugangsdaten"]),
+    # A plural-only noun in Word is red unless the note is tagged.
+    ("die Unterlagen", False, False, ["f:die Unterlagen"]),
+    ("die Unterlagen", False, True, ["p:die Unterlagen"]),
+    # A synonym list is not a paradigm.
+    ("die Zahlungsbestätigung, die Auftragsbestätigung", True, False,
+     ["f:die Zahlungsbestätigung", "f:die Auftragsbestätigung"]),
+    # Nor is a compound, nor the feminine of a masculine.
+    ("die Leistung, die Leistungen, die Leistungsbeschreibung", True, False,
+     ["f:die Leistung", "p:die Leistungen", "f:die Leistungsbeschreibung"]),
+    ("der Baumpate / die Baumpatin", True, False,
+     ["m:der Baumpate", "f:die Baumpatin"]),
+    # Inflected articles in prose: a genitive plural, a dative feminine, a
+    # genitive feminine. Coloured by form, each would teach the wrong gender.
+    ("Auch: nördlich der Alpen, südlich des Flusses", True, False, []),
+    ("der Reihenfolge nach", False, False, []),
+    ("im Laufe der Zeit", False, False, []),
+    ("Die Zehner enden auf -zig — außer dreißig.", True, False, []),
+    # Not nouns at all.
+    ("Weh dem, der lügt!", False, False, []),
+    ("zu + dem = zum; zu + der = zur", True, False, []),
+    ("lügen – log – gelogen", True, False, []),
+])
+def test_gender_colour_matcher(text, in_forms, plural_tag, expected) -> None:
+    assert _gender_hits([[text, in_forms, plural_tag]]) == [expected]

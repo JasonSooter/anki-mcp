@@ -65,6 +65,7 @@ def main() -> int:
             port=config.port,
         )
         _emit_collection_stats(worker)
+        _apply_gender_colors(worker, config.gender_color_note_types)
 
         # In oauth mode the SDK builds its own verifier from the provider.
         verifier = (
@@ -118,6 +119,24 @@ def _emit_collection_stats(worker: CollectionWorker) -> None:
     except Exception:
         # Stats are nice to have; never let them stop the server booting.
         log.exception("could not emit collection stats")
+
+
+def _apply_gender_colors(worker: CollectionWorker, names: tuple[str, ...]) -> None:
+    """Keep the der/die/das colour coding in the note type templates.
+
+    At startup rather than once by hand, so a template edited on another
+    device, or a fresh collection downloaded from AnkiWeb, gets it back. It is
+    a template text change, not a schema change, so it syncs normally.
+    """
+    if not names:
+        return
+    from .gender_colors import install
+
+    try:
+        worker.run_sync(lambda col: install(col, names))
+    except Exception:
+        # Styling is not worth refusing to serve the collection over.
+        log.exception("could not apply gender colours")
 
 
 if __name__ == "__main__":

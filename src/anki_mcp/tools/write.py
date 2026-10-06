@@ -523,6 +523,13 @@ def register_add_note(
         cannot yet read, so a gloss alone leaves most of the answer opaque.
         Translate them naturally, not word for word.
 
+        GENDER COLOURS. Nouns in "Word" and "Forms" are coloured by gender on
+        the cards (der blue, die red, das green, plural orange), read from the
+        text itself. Write Forms entries as "das Heft, die Hefte" -- article,
+        noun, then the plural right after a comma -- and mark a plural that
+        stands alone "(Pl.)": "die Unterlagen (Pl.)". Without that, a plural
+        is indistinguishable from a feminine and shows red.
+
         CARDS. Three per note: recognise the word, produce it (typed), and
         take it down from audio alone (typed). The third is gated on
         "Test Spelling", which is filled automatically -- pass it as "" to skip
